@@ -16,9 +16,22 @@
 			var group;
 			var mesh, sphere;
 			var mazeSize = 16;
-			
 			var clock = new THREE.Clock();
 			var keyboard = new KeyboardState();
+			var obstacles = [];
+			var rays = [
+	      new THREE.Vector3(0, 0, 1),
+	      new THREE.Vector3(1, 0, 1),
+	      new THREE.Vector3(1, 0, 0),
+	      new THREE.Vector3(1, 0, -1),
+	      new THREE.Vector3(0, 0, -1),
+	      new THREE.Vector3(-1, 0, -1),
+	      new THREE.Vector3(-1, 0, 0),
+	      new THREE.Vector3(-1, 0, 1)
+	    ];
+	    var caster = new THREE.Raycaster();
+
+	    var stop = false;
 
 			init();
 			animate();
@@ -74,32 +87,36 @@
 		    var geometryV = new THREE.BoxGeometry( 2*mazeSize+1, 1, 1 );
 		    var geometryH = new THREE.BoxGeometry( 1, 1, 2*mazeSize+1);
 
-		    var material = new THREE.MeshLambertMaterial( { color: 0xFF0000 } );
+		    var material = new THREE.MeshLambertMaterial( { color: 0x000000 } );
 		    var mazeMaterial = new THREE.MeshLambertMaterial( { color: 0x000000 } );
 		    var cube = new THREE.Mesh( geometryV, material );
 		    cube.position.set(0, 0.5, mazeSize);
 		    scene.add( cube );
 
-				var material2 = new THREE.MeshLambertMaterial( { color: 0x00FF00 } );
-		    var cube2 = new THREE.Mesh( geometryH, material2 );
+		    var cube2 = new THREE.Mesh( geometryH, material );
 		    cube2.position.set(mazeSize, 0.5, 0);
 		    scene.add( cube2 );
 		    
-				var material3 = new THREE.MeshBasicMaterial( { color: 0x0000ff } );
-		    var cube3 = new THREE.Mesh( geometryV, material3 );
+		    var cube3 = new THREE.Mesh( geometryV, material );
 		    cube3.position.set(0, 0.5, -mazeSize);
 		    scene.add( cube3 );
 
-				var material4 = new THREE.MeshBasicMaterial( { color: 0xFF00FF } );
-		    var cube4 = new THREE.Mesh( geometryH, material4 );
+		    var cube4 = new THREE.Mesh( geometryH, material );
 		    cube4.position.set(-mazeSize, 0.5, 0);
 		    scene.add( cube4 );
 
+		    obstacles.push(cube);
+		    obstacles.push(cube2);
+		    obstacles.push(cube3);
+		    obstacles.push(cube4);
+				
 		    for(var i=0; i<walls.length; i++){
-		    	var geo  = new THREE.BoxGeometry(walls[i].geo.x, walls[i].geo.y, walls[i].geo.z);
+		    	var geo = new THREE.BoxGeometry(walls[i].geo.x, walls[i].geo.y, walls[i].geo.z);
 		    	var wall = new THREE.Mesh(geo, mazeMaterial);
 		    	wall.position.set(walls[i].position.x, walls[i].position.y, walls[i].position.z);
 		    	scene.add(wall);
+		    	//Add to obstacles, for collision control	
+		    	obstacles.push(wall);
 		    }
 
 		    //Create sphere
@@ -107,12 +124,56 @@
 				var material5 = new THREE.MeshBasicMaterial( { color: 0x00FFFF } );
 		    sphere = new THREE.Mesh( sphereGeo, material5 );
 		    sphere.position.set(13.5, 0.5, 12.5);
+		    sphere.direction = {x: 0, y: 0, z:0};
 		    scene.add( sphere );
 
 		    //Set 
 		    renderer.setClearColor( 0xdddddd, 1);
 		    renderer.render( scene, camera );
 			}
+
+			//http://webmaestro.fr/collisions-detection-three-js-raycasting/ : Test and avoid collisions
+		  function collision() {
+		    var collisions, i,
+		      // Maximum distance from the origin before we consider collision
+		      distance = 2.0;
+		    // For each ray
+		    for (i = 0; i < rays.length; i += 1) {
+		      // We reset the raycaster to this direction
+		      caster.set(sphere.position, rays[i]);
+
+		      // Test if we intersect with any obstacle mesh
+		      collisions = caster.intersectObjects(obstacles);
+		      // And disable that direction if we do
+		      if (collisions.length > 0 && collisions[0].distance <= distance) {
+		        // Yep, this.rays[i] gives us : 0 => up, 1 => up-left, 2 => left, ...
+		        stop = false;
+		        console.log("collisions : ", collisions);
+		        //console.log("object : ", collisions[0].object);
+		        console.log("collisions.length : ", collisions.length);
+		        
+		        if ((i === 0 || i === 1 || i === 7) && sphere.direction.z  === -1){
+		        	console.log("collision D");
+		        	stop = true;
+		          //sphere.direction.setZ(0);
+		        } else if ((i === 3 || i === 4 || i === 5) && sphere.direction.z === 1){
+		          //sphere.direction.setZ(0);
+		          console.log("collision A");
+		          stop = true;
+		        }
+		        if ((i === 1 || i === 2 || i === 3) && sphere.direction.x === -1){
+		          //sphere.direction.setX(0);
+		          //console.log("collision W: ", collisions, " , sphere position: ", sphere.position);
+		          console.log("collision W");
+		          stop = true;
+		        } else if ((i === 5 || i === 6 || i === 7) && sphere.direction.x === 1){
+		          //sphere.direction.setX(0);
+		          console.log("collision S");
+		          stop = true;
+		        }
+		      }
+		    }
+		  }
 
 
 	    function animate(){
@@ -128,30 +189,48 @@
 			function update(){
 				keyboard.update();
 
-				var moveDistance = 25 * clock.getDelta(); 
+				var moveDistance = 10 * clock.getDelta(); 
 
-				if ( keyboard.pressed("A") && sphere.position.z < mazeSize-2){ 
-					sphere.translateZ( moveDistance );
+				if ( keyboard.pressed("A")){// && sphere.position.z < mazeSize-2){ 
+					sphere.direction = {x: 0, y: 0, z: 1};
+					collision();
+					if(!stop)
+						sphere.translateZ( moveDistance );
 				}
-				if ( keyboard.pressed("D") && sphere.position.z > -mazeSize+2){ 
-					sphere.translateZ( -moveDistance );
+				if ( keyboard.pressed("D") ){//&& sphere.position.z > -mazeSize+2){ 
+					sphere.direction = {x: 0, y: 0, z: -1};
+					collision();
+					if(!stop)
+						sphere.translateZ( -moveDistance );
 				}
-				if ( keyboard.pressed("S")  && sphere.position.x < mazeSize-2){ 
-					sphere.translateX( moveDistance );
+				if ( keyboard.pressed("S") ){// && sphere.position.x < mazeSize-2){ 
+					sphere.direction = {x: 1, y: 0, z: 0};
+					collision();
+					if(!stop)
+						sphere.translateX( moveDistance );
 				}
 					
-				if ( keyboard.pressed("W") && sphere.position.x > -mazeSize+2){ 
-					sphere.translateX(  -moveDistance );
+				if ( keyboard.pressed("W")){// && sphere.position.x > -mazeSize+2){ 
+					sphere.direction = {x: -1, y: 0, z: 0};
+					collision();
+					if(!stop)
+						sphere.translateX(  -moveDistance );
 				}
 				//Diagonally
-				if ( keyboard.pressed("E") && sphere.position.z > -mazeSize+2 && sphere.position.x > -mazeSize+2){ 
-					sphere.translateZ( -moveDistance );
-					sphere.translateX(  -moveDistance );
+				/*if ( keyboard.pressed("E")){// && sphere.position.z > -mazeSize+2 && sphere.position.x > -mazeSize+2){ 
+					collision();
+					if(!stop){
+						sphere.translateZ( -moveDistance );
+						sphere.translateX(  -moveDistance );
+					}
 				}
-				if ( keyboard.pressed("Q")  && sphere.position.x > -mazeSize+2 && sphere.position.z < mazeSize-2){ 
-					sphere.translateX( -moveDistance );
-					sphere.translateZ( moveDistance );
-				}
+				if ( keyboard.pressed("Q") ){// && sphere.position.x > -mazeSize+2 && sphere.position.z < mazeSize-2){ 
+					collision();
+					if(!stop){
+						sphere.translateX( -moveDistance );
+						sphere.translateZ( moveDistance );
+					}
+				}*/
 
 				if ( keyboard.down("R") ){
 					sphere.material.color = new THREE.Color(0xff0000);
