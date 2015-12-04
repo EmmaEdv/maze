@@ -1,0 +1,187 @@
+<html>
+	<head>
+		<title>Labyrint</title>
+		<style>
+			body { margin: 0; }
+			canvas { width: 100%; height: 100% }
+		</style>
+	</head>
+	<body>
+		<script src="js/three.min.js"></script>
+		<!--<script src="js/ArrowControls.js"></script>
+		<script src="js/OrbitControls.js"></script>-->
+		<script src="js/KeyboardState.js"></script>
+		<script src="js/stats.min.js"></script>
+		<script>
+			var scene, renderer, camera;
+			var group;
+			var mesh, sphere;
+			var walls = [
+				{
+					geo: {x: 5, y: 1, z: 1},
+					position: {x: 5, y: 0, z: 0}
+				},
+				{
+					geo: {x: 1, y: 1, z: 5},
+					position: {x: 0, y: 0, z: 5}
+				}
+
+			];
+
+			var clock = new THREE.Clock();
+			var keyboard = new KeyboardState();
+
+			init();
+			animate();
+
+	    //Sets up the scene:
+			function init(){
+				var WIDTH = window.innerWidth; 
+				var HEIGHT = window.innerHeight;
+
+				//Renderer
+				renderer = new THREE.WebGLRenderer({antialias: true});
+		    renderer.setSize( WIDTH, HEIGHT );
+		    document.body.appendChild( renderer.domElement );
+		    
+		    //Create scene
+		    scene = new THREE.Scene();
+		    
+		    //Define a camera
+		    camera = new THREE.PerspectiveCamera(
+	        35,         			// Field of view
+	        WIDTH / HEIGHT,  // Aspect ratio
+	        .1,         		// Near
+	        10000       	 // Far
+		    );
+
+		    //camera.position.set( -40, 25, 10 );
+		    camera.position.set( 40,40,0 );
+		    var viewDirection = {x:0, y:0, z:0};
+		    camera.lookAt( viewDirection );
+
+
+		    //Add light
+		    var pointLight = new THREE.PointLight( 0xFFFF00 );
+		    //pointLight.position.set( 10, 0, 10 );
+		    pointLight.position.set( -50, 30, 20 );
+		    scene.add( pointLight );
+
+		    //Ambient light
+				var ambient = new THREE.AmbientLight(0x2f2f2f);
+				scene.add(ambient);
+
+
+		    //Create cubes
+		    var geometryV = new THREE.BoxGeometry( 30, 1, 1 );
+		    var geometryH = new THREE.BoxGeometry( 1, 1, 30 );
+
+		    var material = new THREE.MeshLambertMaterial( { color: 0xFF0000 } );
+		    var cube = new THREE.Mesh( geometryV, material );
+		    cube.position.set(-0.5, 0.5, 15);
+		    scene.add( cube );
+
+				var material2 = new THREE.MeshLambertMaterial( { color: 0x00FF00 } );
+		    var cube2 = new THREE.Mesh( geometryH, material2 );
+		    cube2.position.set(15, 0.5, 0.5);
+		    scene.add( cube2 );
+		    
+				var material3 = new THREE.MeshBasicMaterial( { color: 0x0000ff } );
+		    var cube3 = new THREE.Mesh( geometryV, material3 );
+		    cube3.position.set(0.5, 0.5, -15);
+		    scene.add( cube3 );
+
+				var material4 = new THREE.MeshBasicMaterial( { color: 0xFF00FF } );
+		    var cube4 = new THREE.Mesh( geometryH, material4 );
+		    cube4.position.set(-15, 0.5, -0.5);
+		    scene.add( cube4 );
+
+		    for(var i=0; i<walls.length; i++){
+		    	var geo  = new THREE.BoxGeometry(walls[i].geo.x, walls[i].geo.y, walls[i].geo.z);
+		    	var wall = new THREE.Mesh(geo, material);
+		    	wall.position.set(walls[i].position.x, walls[i].position.y, walls[i].position.z);
+		    	scene.add(wall);
+		    }
+
+		    //Create sphere
+		    var sphereGeo = new THREE.SphereGeometry( 1, 32, 32 );
+				var material5 = new THREE.MeshBasicMaterial( { color: 0x00FFFF } );
+		    sphere = new THREE.Mesh( sphereGeo, material5 );
+		    sphere.position.set(0, 0.5, 0);
+		    scene.add( sphere );
+
+		    //Create plane
+		    var planeGeo = new THREE.PlaneGeometry( 31, 31, 32, 32 );
+				var material = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
+				var plane = new THREE.Mesh( planeGeo, material );
+				plane.rotation.order = "YXZ";
+				//plane.rotation.y = Math.PI/4;
+				plane.rotation.x = Math.PI/2;
+				plane.position.set(0,0,0)
+				scene.add( plane );
+
+
+				scene.add(plane);
+
+				//plane.rotation.x = Math.PI/2;
+				//plane.position.set(planeSize.width*0.5, -planeSize.length*0.5, 5);
+				
+		    //Set 
+		    renderer.setClearColor( 0xdddddd, 1);
+		    renderer.render( scene, camera );
+			}
+
+	    function animate(){
+				requestAnimationFrame(animate);
+
+				//sphere.rotation.x += 0.1;
+				//sphere.rotation.y += Math.PI;
+
+				//Render the scene
+				renderer.render(scene, camera);
+				//controls.update();
+				update();
+			}
+
+			function update(){
+				keyboard.update();
+
+				var moveDistance = 50 * clock.getDelta(); 
+
+				if ( keyboard.pressed("A") && sphere.position.z < 13.0){ 
+					sphere.translateZ( moveDistance );
+				}
+				if ( keyboard.pressed("D") && sphere.position.z > -13.0){ 
+					sphere.translateZ( -moveDistance );
+				}
+				if ( keyboard.pressed("S")  && sphere.position.x < 13.0){ 
+					sphere.translateX( moveDistance );
+				}
+					
+				if ( keyboard.pressed("W") && sphere.position.x > -13.0){ 
+					sphere.translateX(  -moveDistance );
+				}
+				//Diagonally
+				if ( keyboard.pressed("E") && sphere.position.z > -13.0 && sphere.position.x > -13.0){ 
+					sphere.translateZ( -moveDistance );
+					sphere.translateX(  -moveDistance );
+				}
+				if ( keyboard.pressed("Q")  && sphere.position.x > -13.0 && sphere.position.z < 13.0){ 
+					sphere.translateX( -moveDistance );
+					sphere.translateZ( moveDistance );
+				}
+
+				if ( keyboard.down("R") ){
+					sphere.material.color = new THREE.Color(0xff0000);
+				}
+				if ( keyboard.up("R") ){
+					sphere.material.color = new THREE.Color(0x00FFFF);
+				}
+					
+				//controls.update();
+				//stats.update();
+			}
+
+		</script>
+	</body>
+</html>
