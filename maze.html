@@ -7,29 +7,22 @@
 		</style>
 	</head>
 	<body>
+		<div id="header">Hallo
+		</div>
+		<div id="container">
 		<script src="js/three.min.js"></script>
 		<script src="js/KeyboardState.js"></script>
 		<script src="js/stats.min.js"></script>
 		<script src="wallPositions.js"></script>
+		<script src="js/CollisionControl.js"></script>
 		<script>
 			var scene, renderer, camera;
 			var group;
-			var mesh, sphere;
+			var mesh, sphere, spotLight;
 			var mazeSize = 16;
 			var clock = new THREE.Clock();
 			var keyboard = new KeyboardState();
 			var obstacles = [];
-			var rays = [
-	      new THREE.Vector3(0, 0, 1),
-	      new THREE.Vector3(1, 0, 1),
-	      new THREE.Vector3(1, 0, 0),
-	      new THREE.Vector3(1, 0, -1),
-	      new THREE.Vector3(0, 0, -1),
-	      new THREE.Vector3(-1, 0, -1),
-	      new THREE.Vector3(-1, 0, 0),
-	      new THREE.Vector3(-1, 0, 1)
-	    ];
-	    var caster = new THREE.Raycaster();
 
 	    var stop = false;
 
@@ -63,19 +56,14 @@
 		    var viewDirection = {x:0, y:0, z:0};
 		    camera.lookAt( viewDirection );
 
-		    //Add light
-		    var pointLight = new THREE.PointLight( 0xFFFF00 );
-		    //pointLight.position.set( 10, 0, 10 );
-		    pointLight.position.set( -50, 30, 20 );
-		    scene.add( pointLight );
-
+		    //LIGHT
 		    //Ambient light
-				var ambient = new THREE.AmbientLight(0x2f2f2f);
-				scene.add(ambient);
-		    
+				var ambient = new THREE.AmbientLight(0x2f2f2f, 0);
+				//scene.add(ambient);
+
 		    //Create plane
 		    var planeGeo = new THREE.PlaneGeometry( mazeSize*2, mazeSize*2, 32, 32 );
-				var material = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
+				var material = new THREE.MeshPhongMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
 				var plane = new THREE.Mesh( planeGeo, material );
 				plane.rotation.order = "YXZ";
 				//plane.rotation.y = Math.PI/4;
@@ -84,32 +72,37 @@
 				scene.add(plane);
 
 		    //Create fence
-		    var geometryV = new THREE.BoxGeometry( 2*mazeSize+1, 1, 1 );
-		    var geometryH = new THREE.BoxGeometry( 1, 1, 2*mazeSize+1);
+		    var geometryRight = new THREE.BoxGeometry( 2*mazeSize+1, 1, 1 );
+		    var geometryLeft = new THREE.BoxGeometry( 2*mazeSize-5.5, 1, 1 );
+		    var geometryTop = new THREE.BoxGeometry( 1, 1, 2*mazeSize+1);
+		    var geometryBottom = new THREE.BoxGeometry( 1, 1, 2*mazeSize-5.55);
 
-		    var material = new THREE.MeshLambertMaterial( { color: 0x000000 } );
-		    var mazeMaterial = new THREE.MeshLambertMaterial( { color: 0x000000 } );
-		    var cube = new THREE.Mesh( geometryV, material );
+		    //var material = new THREE.MeshLambertMaterial( { color: 0x000000 } );
+		    var material = new THREE.MeshPhongMaterial( { color: 0x000000 } );
+		    var mazeMaterial = new THREE.MeshPhongMaterial( { color: 0x000000 } );
+		    var cube = new THREE.Mesh( geometryRight, material );
 		    cube.position.set(0, 0.5, mazeSize);
 		    scene.add( cube );
 
-		    var cube2 = new THREE.Mesh( geometryH, material );
-		    cube2.position.set(mazeSize, 0.5, 0);
+		    var cube2 = new THREE.Mesh( geometryBottom, material );
+		    cube2.position.set(mazeSize, 0.5, -3.12);
 		    scene.add( cube2 );
 		    
-		    var cube3 = new THREE.Mesh( geometryV, material );
-		    cube3.position.set(0, 0.5, -mazeSize);
+		    var cube3 = new THREE.Mesh( geometryLeft, material );
+		    cube3.position.set(3.25, 0.5, -mazeSize);
 		    scene.add( cube3 );
 
-		    var cube4 = new THREE.Mesh( geometryH, material );
+		    var cube4 = new THREE.Mesh( geometryTop, material );
 		    cube4.position.set(-mazeSize, 0.5, 0);
 		    scene.add( cube4 );
 
+		    //Add to obstacles, for collision control	
 		    obstacles.push(cube);
 		    obstacles.push(cube2);
 		    obstacles.push(cube3);
 		    obstacles.push(cube4);
 				
+				//Add maze walls
 		    for(var i=0; i<walls.length; i++){
 		    	var geo = new THREE.BoxGeometry(walls[i].geo.x, walls[i].geo.y, walls[i].geo.z);
 		    	var wall = new THREE.Mesh(geo, mazeMaterial);
@@ -121,56 +114,26 @@
 
 		    //Create sphere
 		    var sphereGeo = new THREE.SphereGeometry( 1, 32, 32 );
-				var material5 = new THREE.MeshBasicMaterial( { color: 0x00FFFF } );
+				var material5 = new THREE.MeshPhongMaterial( { color: 0x00FFFF } );
 		    sphere = new THREE.Mesh( sphereGeo, material5 );
-		    sphere.position.set(13.5, 0.5, 12.5);
+		    sphere.position.set(15.5, 0.5, 12.5);
 		    sphere.direction = {x: -1, y: 0, z:0};
 		    scene.add( sphere );
+
+		    spotLight = new THREE.SpotLight(0x00FFFF);
+		    //spotLight.position.set(0,15,0);
+		    //spotLight.position.set(sphere.position.x, sphere.position.y + 10, sphere.position.z);
+		    spotLight.target = sphere;
+		    spotLight.castShadow = true;
+		    scene.add(spotLight);
+
 
 		    //Set 
 		    renderer.setClearColor( 0xdddddd, 1);
 		    renderer.render( scene, camera );
+
+		    //Skapa instruktioner
 			}
-
-			//http://webmaestro.fr/collisions-detection-three-js-raycasting/ : Test and avoid collisions
-		  function collision() {
-		    var collisions, i;
-		      // Maximum distance from the origin before we consider collision
-		    var distance = 1.25;
-		    // For each ray
-		    for (i = 0; i < rays.length; i += 1) {
-		      // We reset the raycaster to this direction
-		      caster.set(sphere.position, rays[i]);
-		      // Test if we intersect with any obstacle mesh
-		      collisions = caster.intersectObjects(obstacles);
-		      // And disable that direction if we do
-		      //EN KOLLISSION
-		      if (collisions.length > 0 && collisions[0].distance <= distance) {
-		      	//console.log("EN KOLLISSION, ", collisions[0].distance <=  distance, " length ", collisions.length);
-		        // Yep, this.rays[i] gives us : 0 => up, 1 => up-left, 2 => left, ...
-		        if ((i === 0 || i === 1 || i === 7) && sphere.direction.z  === 1){
-		        	console.log("collision left");
-		        	//stop = true;
-		        	sphere.direction.z  = 0;
-		        } else if ((i === 3 || i === 4 || i === 5) && sphere.direction.z === -1){
-		          console.log("collision right");
-		          //stop = true;
-		          sphere.direction.z  = 0;
-		        }
-		        if ((i === 1 || i === 2 || i === 3) && sphere.direction.x === 1){
-		          console.log("collision down");
-		          //stop = true;
-		          sphere.direction.x  = 0;
-		        } else if ((i === 5 || i === 6 || i === 7) && sphere.direction.x === -1){
-		          console.log("collision up");
-		          //stop = true;
-		          sphere.direction.x  = 0;
-		        }
-		        if(stop) console.log("STOP!");
-		      }
-		    }
-		  }
-
 
 	    function animate(){
 				requestAnimationFrame(animate);
@@ -181,38 +144,35 @@
 				update();
 			}
 
-
 			function update(){
 				keyboard.update();
+				//Update the light position
+				spotLight.position.set(sphere.position.x, sphere.position.y + 10, sphere.position.z);
 
 				var moveDistance = 10 * clock.getDelta(); 
 
-				if ( keyboard.pressed("A")){// && sphere.position.z < mazeSize-2){ 
+				if (keyboard.pressed("left")){// && sphere.position.z < mazeSize-2){ 
 					sphere.direction = {x: 0, y: 0, z: 1};
 					collision();
-					//if(!stop)
 					if(sphere.direction.x !== 0 || sphere.direction.z !== 0)
 						sphere.translateZ( moveDistance );
 				}
-				if ( keyboard.pressed("D") ){//&& sphere.position.z > -mazeSize+2){ 
+				if (keyboard.pressed("right")){//&& sphere.position.z > -mazeSize+2){ 
 					sphere.direction = {x: 0, y: 0, z: -1};
 					collision();
-					//if(!stop)
 					if(sphere.direction.x != 0 || sphere.direction.z != 0)
 						sphere.translateZ( -moveDistance );
 				}
-				if ( keyboard.pressed("S") ){// && sphere.position.x < mazeSize-2){ 
+				if (keyboard.pressed("down")){// && sphere.position.x < mazeSize-2){ 
 					sphere.direction = {x: 1, y: 0, z: 0};
 					collision();
-					//if(!stop)
 					if(sphere.direction.x != 0 || sphere.direction.z != 0)
 						sphere.translateX( moveDistance );
 				}
 					
-				if ( keyboard.pressed("W")){// && sphere.position.x > -mazeSize+2){ 
+				if (keyboard.pressed("up")){// && sphere.position.x > -mazeSize+2){ 
 					sphere.direction = {x: -1, y: 0, z: 0};
 					collision();
-					//if(!stop)
 					if(sphere.direction.x != 0 || sphere.direction.z != 0)
 						sphere.translateX(  -moveDistance );
 				}
@@ -223,8 +183,23 @@
 				if ( keyboard.up("R") ){
 					sphere.material.color = new THREE.Color(0x00FFFF);
 				}
+				if(sphere.position.x <= -10.5 && sphere.position.z <= -15){
+					//Stoppa kontrollerna, skriv ut text
+					console.log("MÅL!", sphere.position);
+				}
+				if(sphere.position.z <= -18){
+					//Stoppa kontrollerna, skriv ut text
+					console.log("STOPP!!!");
+					sphere.position.set(-12.5, 0.5, -15);
+				}
+				if(sphere.position.x >= 18 || sphere.position.z >= 15.5 || (sphere.position.x > 15.5 && sphere.position.z <= 10)){
+					//Stoppa kontrollerna, skriv ut text
+					console.log("STOPP!!!", sphere.position);
+					sphere.position.set(15.5, 0.5, 12.5);
+				}
 			}
 
 		</script>
+	</div>
 	</body>
 </html>
