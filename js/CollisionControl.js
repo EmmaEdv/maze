@@ -23,9 +23,8 @@ function collision() {
     // Test if we intersect with any obstacle mesh
     collisions = caster.intersectObjects(obstacles);
     // And disable that direction if we do
-    //EN KOLLISSION
+    
     if (collisions.length > 0 && collisions[0].distance <= distance) {
-    	//console.log("EN KOLLISSION, ", collisions[0].distance <=  distance, " length ", collisions.length);
       // Yep, this.rays[i] gives us : 0 => up, 1 => up-left, 2 => left, ...
       if ((i === 0 || i === 1 || i === 7) && sphere.direction.z  === 1)
       	sphere.direction.z  = 0;

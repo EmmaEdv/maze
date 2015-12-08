@@ -27,7 +27,6 @@ var walls = [
 		geo: {x: 5.5, y: objectHeight, z: 0.5},
 		position: {x: -2.5, y: objectHeight/2, z: 0}
 	},
-
 	{
 		geo: {x: 5.5, y: objectHeight, z: 0.5},
 		position: {x: -12.75, y: objectHeight/2, z: 0}
