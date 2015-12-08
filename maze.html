@@ -7,9 +7,12 @@
 		</style>
 	</head>
 	<body>
-		<div id="header">Hallo
+		<div id="header">
+			Hallo
 		</div>
 		<div id="container">
+			<div id="congratulations">
+			</div>
 		<script src="js/three.min.js"></script>
 		<script src="js/KeyboardState.js"></script>
 		<script src="js/stats.min.js"></script>
@@ -18,14 +21,14 @@
 		<script>
 			var scene, renderer, camera;
 			var group;
-			var mesh, sphere, spotLight;
+			var mesh, sphere, spotLight, moon;
 			var mazeSize = 16;
 			var clock = new THREE.Clock();
 			var keyboard = new KeyboardState();
 			var obstacles = [];
 
-	    var stop = false;
-
+			var congrats = document.getElementById("congratulations");
+			congrats.style.display = '';
 			init();
 			animate();
 
@@ -61,10 +64,17 @@
 				var ambient = new THREE.AmbientLight(0x2f2f2f, 0);
 				//scene.add(ambient);
 
+				//Load texture
+				var marbleTex = THREE.ImageUtils.loadTexture("./texture/marble_2.jpg");
+				var marbleMat = new THREE.MeshPhongMaterial( { map: marbleTex } );
+				// make sure the texture is applied to both sides
+				marbleMat.side = THREE.DoubleSide;
+
 		    //Create plane
 		    var planeGeo = new THREE.PlaneGeometry( mazeSize*2, mazeSize*2, 32, 32 );
 				var material = new THREE.MeshPhongMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
-				var plane = new THREE.Mesh( planeGeo, material );
+				//var plane = new THREE.Mesh( planeGeo, material );
+				var plane = new THREE.Mesh( planeGeo, marbleMat );
 				plane.rotation.order = "YXZ";
 				//plane.rotation.y = Math.PI/4;
 				plane.rotation.x = Math.PI/2;
@@ -72,28 +82,28 @@
 				scene.add(plane);
 
 		    //Create fence
-		    var geometryRight = new THREE.BoxGeometry( 2*mazeSize+1, 1, 1 );
-		    var geometryLeft = new THREE.BoxGeometry( 2*mazeSize-5.5, 1, 1 );
-		    var geometryTop = new THREE.BoxGeometry( 1, 1, 2*mazeSize+1);
-		    var geometryBottom = new THREE.BoxGeometry( 1, 1, 2*mazeSize-5.55);
+		    var geometryRight = new THREE.BoxGeometry( 2*mazeSize+1, objectHeight, 1 );
+		    var geometryLeft = new THREE.BoxGeometry( 2*mazeSize-5.5, objectHeight, 1 );
+		    var geometryTop = new THREE.BoxGeometry( 1, objectHeight, 2*mazeSize+1);
+		    var geometryBottom = new THREE.BoxGeometry( 1, objectHeight, 2*mazeSize-5.55);
 
 		    //var material = new THREE.MeshLambertMaterial( { color: 0x000000 } );
 		    var material = new THREE.MeshPhongMaterial( { color: 0x000000 } );
 		    var mazeMaterial = new THREE.MeshPhongMaterial( { color: 0x000000 } );
 		    var cube = new THREE.Mesh( geometryRight, material );
-		    cube.position.set(0, 0.5, mazeSize);
+		    cube.position.set(0, objectHeight/2, mazeSize);
 		    scene.add( cube );
 
 		    var cube2 = new THREE.Mesh( geometryBottom, material );
-		    cube2.position.set(mazeSize, 0.5, -3.12);
+		    cube2.position.set(mazeSize, objectHeight/2, -3.12);
 		    scene.add( cube2 );
 		    
 		    var cube3 = new THREE.Mesh( geometryLeft, material );
-		    cube3.position.set(3.25, 0.5, -mazeSize);
+		    cube3.position.set(3.25, objectHeight/2, -mazeSize);
 		    scene.add( cube3 );
 
 		    var cube4 = new THREE.Mesh( geometryTop, material );
-		    cube4.position.set(-mazeSize, 0.5, 0);
+		    cube4.position.set(-mazeSize, objectHeight/2, 0);
 		    scene.add( cube4 );
 
 		    //Add to obstacles, for collision control	
@@ -113,14 +123,18 @@
 		    }
 
 		    //Create sphere
+				var steelTex = THREE.ImageUtils.loadTexture("./texture/aluminum.jpg");
+				var steelMat = new THREE.MeshPhongMaterial( { map: steelTex } );
+				// make sure the texture is applied to both sides
+
 		    var sphereGeo = new THREE.SphereGeometry( 1, 32, 32 );
-				var material5 = new THREE.MeshPhongMaterial( { color: 0x00FFFF } );
-		    sphere = new THREE.Mesh( sphereGeo, material5 );
-		    sphere.position.set(15.5, 0.5, 12.5);
+				var material5 = new THREE.MeshPhongMaterial( { color: 0xFFFFFF } );
+		    sphere = new THREE.Mesh( sphereGeo, steelMat );
+		    sphere.position.set(15.5, 1, 12.5);
 		    sphere.direction = {x: -1, y: 0, z:0};
 		    scene.add( sphere );
 
-		    spotLight = new THREE.SpotLight(0x00FFFF);
+		    spotLight = new THREE.SpotLight(0xFFFFFF);
 		    //spotLight.position.set(0,15,0);
 		    //spotLight.position.set(sphere.position.x, sphere.position.y + 10, sphere.position.z);
 		    spotLight.target = sphere;
@@ -190,12 +204,12 @@
 				if(sphere.position.z <= -18){
 					//Stoppa kontrollerna, skriv ut text
 					console.log("STOPP!!!");
-					sphere.position.set(-12.5, 0.5, -15);
+					sphere.position.set(-12.5, 1, -15);
 				}
 				if(sphere.position.x >= 18 || sphere.position.z >= 15.5 || (sphere.position.x > 15.5 && sphere.position.z <= 10)){
 					//Stoppa kontrollerna, skriv ut text
 					console.log("STOPP!!!", sphere.position);
-					sphere.position.set(15.5, 0.5, 12.5);
+					sphere.position.set(15.5, 1, 12.5);
 				}
 			}
 
