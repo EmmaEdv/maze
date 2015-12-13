@@ -207,12 +207,12 @@ function update(){
 function finished(){
 	//Set text and display the interaction div
 	center.innerHTML = "You reached goal in " + time + " seconds.";
-	bottom.innerHTML = "<button class='button' id='start' onclick='btnStart()'>Restart</button>";
+	bottom.innerHTML = "<button class='button' id='start' onclick='btnPlay()'>Play</button>";
 	interaction.style.display = '';
 }
 
-//When player presses the start/restart button:
-function btnStart(){
+//When player presses the play button:
+function btnPlay(){
 	//Hide the interaction div, run start to sett balls position and set timer
 	interaction.style.display = 'none';
 	start();
