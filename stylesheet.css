@@ -1,0 +1,51 @@
+html, body{
+	margin: 0px;
+  height: 100%;
+  width: 100%
+}
+
+#top{
+	margin-top: 10%;
+	padding-bottom: 5%;
+	color: white;
+}
+
+#center{
+	padding-bottom: 5%;
+}
+
+#bottom: {
+	position: absolute;
+	width: 50%;
+	text-align: center;
+}
+
+.button {
+  background-color: #4CAF50; /* Green */
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+}
+
+#interaction {
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	background-color: rgba(0,0,0,0.5);
+	color: #ffffff;
+	text-align: center;
+	font-family: sans-serif;
+}
+
+#timer {
+	width: 100%;
+	position: absolute;
+	color: #000000;
+	padding-top: 7px;
+	text-align: center;
+	font-family: sans-serif;
+}

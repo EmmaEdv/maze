@@ -1,0 +1,39 @@
+<html>
+	<head>
+		<title>Labyrint</title>
+		<link rel="stylesheet" type="text/css" href="stylesheet.css">
+	</head>
+	<body>
+		<div id="timer">
+			Time: 0.0 seconds
+		</div>
+		<!--Interaction div holds the start button and instrutions, displayed before and after game-->
+		<div id="interaction">
+			<div id="box">
+				<div id="top">
+					Find your way through the maze!
+					<br>Use arrows to move the ball<br>
+				</div>
+				<div id="center">
+					<!--Write time after finish to this div-->
+				</div>
+				<div id="bottom">
+					<button class="button" id="start" onclick="btnStart()">Start</button>
+				</div>
+			</div>
+		</div>
+		<div id="container">
+		<!--Including js files-->
+		<!--Three library-->
+		<script src="js/three.min.js"></script>		
+		<!--Keyboard controls: Source: https://github.com/stemkoski/stemkoski.github.com/blob/master/Three.js/js/KeyboardState.js-->
+		<script src="js/KeyboardState.js"></script>
+		<!--Collision control: Source: http://webmaestro.fr/collisions-detection-three-js-raycasting/ : Test and avoid collisions-->
+		<script src="js/CollisionControl.js"></script>
+		<!--Positions of the walls-->
+		<script src="wallPositions.js"></script>
+		<!--Creating scene in scene.js-->
+		<script src="js/maze.js"></script>
+	</div>
+	</body>
+</html>
